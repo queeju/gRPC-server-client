@@ -3,60 +3,32 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"math/rand"
+	"log/slog"
 	"net"
-	"time"
+	"os"
 
-	"github.com/google/uuid"
-	rnd "golang.org/x/exp/rand"
-	"gonum.org/v1/gonum/stat/distuv"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	transmitter "greaterm/alien_detector/gen/go"
 )
 
 var (
-	port       = flag.Int("port", 8888, "The server port")
-	normalDist distuv.Normal
+	port    = flag.Int("port", 8888, "The server port")
+	logFile = flag.String("l", "", "path/to/log")
 )
 
-type server struct {
-	transmitter.UnimplementedTransmitterServiceServer
-}
-
-func (s *server) Transmit(
-	req *transmitter.Request,
-	stream transmitter.TransmitterService_TransmitServer) error {
-	doMath() // generate normal distribution
-	for {
-		select {
-		case <-stream.Context().Done():
-			return status.Error(codes.Canceled, "Stream has ended")
-		default:
-			time.Sleep(time.Second)
-			uuid, freq := getMsg()
-			res := &transmitter.Response{
-				SessionId: uuid,
-				Frequency: freq,
-				Time:      timestamppb.Now(),
-			}
-			if err := stream.SendMsg(res); err != nil {
-				return err
-			}
-		}
-	}
-} 
-
 func main() {
-
 	flag.Parse()
+	logger := setupLogger()
+	logger.Info("Starting transmitter server", slog.Int("port", *port))
+	logger.Debug("debug msg")
+	logger.Error("error msg")
+	logger.Info("info msg")
+	logger.Warn("warn msg")
+
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logger.Error("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
 	transmitterServer := &server{}
@@ -64,28 +36,13 @@ func main() {
 	grpcServer.Serve(lis)
 }
 
-func doMath() {
-	// mean from [-10, 10] interval
-	mean := rand.Float64()*20 - 10
-	// standard deviation from [0.3, 1.5].
-	sd := rand.Float64()*1.2 + 0.3
-
-	// Create a normal distribution with the specified mean and standard deviation
-	normalDist = distuv.Normal{
-		Mu:    mean,
-		Sigma: sd,
-		Src:   rnd.NewSource(uint64(time.Now().UnixNano())),
+func setupLogger() *slog.Logger {
+	var lf *os.File
+	if *logFile == "" {
+		lf = os.Stdout
+	} else {
+		lf = os.Stderr
 	}
-
-	fmt.Println("mean:", mean)
-	fmt.Println("sd:  ", sd)
-}
-
-func getMsg() (string, float64) {
-	// Generate a sample from the normal distribution
-	freq := normalDist.Rand()
-	uuid := uuid.New().String()
-	fmt.Println("freq:", freq)
-	fmt.Println("uuid:", uuid)
-	return uuid, freq
+	// TODO: add log file path handling
+	return slog.New(slog.NewTextHandler(lf, &slog.HandlerOptions{Level: slog.LevelDebug}))
 }
