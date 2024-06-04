@@ -1,0 +1,15 @@
+src/
+├── proto/
+│   ├── messages.proto
+├── gen/
+│   └── go/
+│       ├── messages.pb.go
+│       ├── messages_grpc.pb.go
+├── server/
+│   ├── main.go
+│   ├── transmitter.go
+├── client/
+│   ├── main.go
+├── go.mod
+├── go.sum
+└── README.md
