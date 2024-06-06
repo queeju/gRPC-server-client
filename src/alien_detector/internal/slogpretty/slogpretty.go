@@ -1,5 +1,3 @@
-// package courtesy of github.com/GolangLessons
-
 package slogpretty
 
 import (
@@ -8,8 +6,15 @@ import (
 	"io"
 	stdLog "log"
 	"log/slog"
+	"os"
 
 	"github.com/fatih/color"
+)
+
+const (
+	ansiReset      = "\033[0m"
+	ansiFaint      = "\033[2m"
+	ansiResetFaint = "\033[22m"
 )
 
 type PrettyHandlerOptions struct {
@@ -39,13 +44,13 @@ func (h *PrettyHandler) Handle(_ context.Context, r slog.Record) error {
 
 	switch r.Level {
 	case slog.LevelDebug:
-		level = color.MagentaString(level)
+		level = color.MagentaString("DBG")
 	case slog.LevelInfo:
-		level = color.BlueString(level)
+		level = color.BlueString("INF")
 	case slog.LevelWarn:
-		level = color.YellowString(level)
+		level = color.YellowString("WRN")
 	case slog.LevelError:
-		level = color.RedString(level)
+		level = color.RedString("ERR")
 	}
 
 	fields := make(map[string]interface{}, r.NumAttrs())
@@ -71,6 +76,7 @@ func (h *PrettyHandler) Handle(_ context.Context, r slog.Record) error {
 	}
 
 	timeStr := r.Time.Format("[15:05:05.000]")
+	timeStr = ansiFaint + timeStr + ansiResetFaint
 	msg := color.CyanString(r.Message)
 
 	h.l.Println(
@@ -97,4 +103,25 @@ func (h *PrettyHandler) WithGroup(name string) slog.Handler {
 		Handler: h.Handler.WithGroup(name),
 		l:       h.l,
 	}
+}
+
+func SetupPrettySlog(logFile string) *slog.Logger {
+	opts := PrettyHandlerOptions{
+		SlogOpts: &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		},
+	}
+
+	var w *os.File
+
+	if logFile == "stdout" {
+		w = os.Stdout
+	} else {
+		// TODO: implement logging into file
+		w = os.Stderr
+	}
+
+	handler := opts.NewPrettyHandler(w)
+
+	return slog.New(handler)
 }

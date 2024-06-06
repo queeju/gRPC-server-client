@@ -32,7 +32,7 @@ func (s *server) Transmit(
 		case <-stream.Context().Done():
 			return status.Error(codes.Canceled, "Stream has ended")
 		default:
-			time.Sleep(time.Second/10)
+			time.Sleep(time.Second / 10)
 			freq := getFrequency()
 			res := &transmitter.Response{
 				SessionId: uuid,

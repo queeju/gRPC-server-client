@@ -5,22 +5,29 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
-	"os"
+	// "os"
 
 	"google.golang.org/grpc"
+
 	transmitter "greaterm/alien_detector/gen/go"
+	// "greaterm/alien_detector/internal/mylog"
 	plog "greaterm/alien_detector/internal/slogpretty"
 )
 
 var (
 	port    = flag.Int("port", 8888, "The server port")
-	logFile = flag.String("l", "", "path/to/log")
+	logFile = flag.String("l", "stdout", "path/to/log")
 	logger  *slog.Logger
 )
 
 func main() {
 	flag.Parse()
-	logger = setupLogger()
+
+	// TODO: handle err
+	// logger, err := mylog.SetupLogger(*logFile)
+	// logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	logger = plog.SetupPrettySlog(*logFile)
+
 	logger.Info("Starting transmitter server", slog.Int("port", *port))
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
@@ -33,23 +40,4 @@ func main() {
 	if err = grpcServer.Serve(lis); err != nil {
 		logger.Error("Server error: %v", err)
 	}
-}
-
-func setupLogger() *slog.Logger {
-	var lf *os.File
-	if *logFile == "" {
-		lf = os.Stdout
-	} else {
-		// TODO: implement logging into file
-		lf = os.Stderr
-	}
-
-	opts := plog.PrettyHandlerOptions{
-		SlogOpts: &slog.HandlerOptions{
-			Level: slog.LevelDebug,
-		},
-	}
-
-	handler := opts.NewPrettyHandler(lf)
-	return slog.New(handler)
 }
