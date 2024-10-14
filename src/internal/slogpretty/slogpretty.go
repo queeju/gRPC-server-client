@@ -7,6 +7,7 @@ import (
 	stdLog "log"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -75,7 +76,7 @@ func (h *PrettyHandler) Handle(_ context.Context, r slog.Record) error {
 		}
 	}
 
-	timeStr := r.Time.Format("[15:05:05.000]")
+	timeStr := time.Now().Format("[15:04:05.000]")
 	timeStr = ansiFaint + timeStr + ansiResetFaint
 	msg := color.CyanString(r.Message)
 
@@ -98,7 +99,6 @@ func (h *PrettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 }
 
 func (h *PrettyHandler) WithGroup(name string) slog.Handler {
-	// TODO: implement
 	return &PrettyHandler{
 		Handler: h.Handler.WithGroup(name),
 		l:       h.l,
@@ -117,7 +117,6 @@ func SetupPrettySlog(logFile string) *slog.Logger {
 	if logFile == "stdout" {
 		w = os.Stdout
 	} else {
-		// TODO: implement logging into file
 		w = os.Stderr
 	}
 

@@ -1,0 +1,36 @@
+version: 3
+
+tasks:
+  generate:
+    desc: "Generate code from proto files"
+    cmds:
+      - protoc -I proto proto/transmitter.proto --go_out=./gen/go --go_opt=paths=source_relative --go-grpc_out=./gen/go --go-grpc_opt=paths=source_relative
+
+  format:
+    desc: "Format code recursively"
+    cmds:
+      - find . -name '*.go' | xargs gofmt -w
+  
+  clean:
+    desc: "Clean executables"
+    cmds:
+      - rm -f server/server client/client
+  
+  client:
+    desc: "Rebuild and start the client"
+    cmds:
+      - cd client && go build .
+      - cmd: client/client -pgconf "postgres://postgres:123@localhost:5432/postgres?sslmode=disable"
+        ignore_error: true
+  
+  server:
+    desc: "Rebuild and start the server"
+    cmds:
+      - cd server && go build .
+      - cmd: server/server
+        ignore_error: true
+  
+  test:
+    desc: "Run analyser tests"
+    cmds:
+      - cd analyse && go test -v

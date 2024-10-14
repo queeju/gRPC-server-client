@@ -3,15 +3,12 @@ syntax = "proto3";
 package transmitter;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 option go_package = "greaterm/alien_detector/gen/go/transmitter";
 
 service TransmitterService {
-  rpc Transmit(Request) returns (stream Response) {};
-}
-
-message Request {
-  bool req = 1;
+  rpc GetData(google.protobuf.Empty) returns (stream Response) {}
 }
 
 message Response {
