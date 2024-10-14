@@ -1,6 +1,7 @@
 ## gRPC server-client app for anomaly detection in a stream of data
 
 The project is an anomaly detection system for streaming frequency data. The system consists of a gRPC-based server that generates and streams frequency data, a client that processes this data to detect anomalies, and a PostgreSQL database for storing detected anomalies.
+This project was developed as a part of School 21 curriculum.
 
 1. **Transmitter (gRPC Server)**: 
    - Implements a gRPC server that streams frequency data in a specific format. Each message contains a `session_id`, a `frequency` value, and a `timestamp`.
